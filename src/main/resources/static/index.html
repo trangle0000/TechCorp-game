@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TechCorp Duel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; max-width: 800px; margin: 40px auto; padding: 20px; }
+        h1 { color: #00d4ff; text-align: center; }
+        .panel { background: #16213e; border-radius: 10px; padding: 20px; margin: 15px 0; }
+        .status { font-size: 18px; color: #00d4ff; font-weight: bold; margin-bottom: 10px; }
+        .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        button {
+            padding: 12px 20px; border: none; border-radius: 8px;
+            background: #0f3460; color: white; cursor: pointer; font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #00d4ff; color: #000; }
+        button.reset { background: #c0392b; }
+        button.reset:hover { background: #e74c3c; }
+        .log { background: #0d0d0d; border-radius: 8px; padding: 15px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+        .log p { margin: 3px 0; color: #a8e6cf; }
+        .log p.event { color: #ff6b6b; }
+        .title-bar { text-align: center; color: #888; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>TechCorp Duel</h1>
+    <p class="title-bar">Turn-based Business Strategy Game</p>
+
+    <div class="panel">
+        <div class="status" id="state">Loading game state...</div>
+    </div>
+
+    <div class="panel">
+        <b>Choose your action:</b>
+        <div class="buttons">
+            <button onclick="action(1)">1 - Assign All to Strategic Project</button>
+            <button onclick="action(2)">2 - Pause Strategic Project</button>
+            <button onclick="action(3)">3 - Resume Strategic Project</button>
+            <button onclick="action(4)">4 - Save Cash (80% salaries)</button>
+            <button onclick="action(5)">5 - Skip Turn</button>
+            <button class="reset" onclick="newGame()">New Game</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <b>Game Log:</b>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        async function loadState() {
+            const res = await fetch('/game/state');
+            const text = await res.text();
+            document.getElementById('state').innerText = text;
+        }
+
+        async function action(choice) {
+            const res = await fetch('/game/action/' + choice, { method: 'POST' });
+            const text = await res.text();
+            addLog(text);
+            loadState();
+        }
+
+        async function newGame() {
+            const res = await fetch('/game/new', { method: 'POST' });
+            const text = await res.text();
+            addLog('--- ' + text + ' ---');
+            loadState();
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('log');
+            const p = document.createElement('p');
+            if (msg.includes('Crisis') || msg.includes('over')) p.className = 'event';
+            p.innerText = msg;
+            log.appendChild(p);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        loadState();
+    </script>
+</body>
+</html>
